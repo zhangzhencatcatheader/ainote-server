@@ -4,12 +4,14 @@
 
 ## 技术栈
 
-- **语言**: Kotlin 2.1.20
+- **语言**: Kotlin
 - **框架**: Spring Boot 3.5.6
 - **ORM**: Jimmer 0.9.117
 - **构建工具**: Gradle + KSP (Kotlin Symbol Processing)
-- **数据库**: H2 (默认), MySQL, PostgreSQL (可配置)
-- **缓存**: Redis + Redisson (可选)
+- **数据库**: PostgreSQL (默认), H2, MySQL (可配置)
+- **缓存**: Redis (可选)
+- **文件存储**: Aliyun OSS (可配置)
+- **认证**: JWT (Bearer Token)
 
 ## 项目结构
 
@@ -56,11 +58,15 @@ runtime → repository → model
 
 ### 运行应用
 
+#### 使用 Gradle
+
 ```bash
 ./gradlew :service:bootRun
 ```
 
-或在 IDE 中直接运行 `service/src/main/kotlin/top/zztech/ainote/App.kt` 中的 `main` 函数。
+#### 使用 IDE
+
+在 IDE 中直接运行 `service/src/main/kotlin/top/zztech/ainote/App.kt` 中的 `main` 函数。
 
 应用将启动在 `http://localhost:8080`
 
@@ -71,6 +77,11 @@ runtime → repository → model
 - **Swagger UI**: http://localhost:8080/openapi.html
 - **OpenAPI 规范**: http://localhost:8080/openapi.yml
 - **TypeScript 客户端**: http://localhost:8080/ts.zip
+
+**认证**: API 请求需要在 Header 中添加 JWT Token:
+```bash
+curl -H "Authorization: Bearer {token}" http://localhost:8080/api/endpoint
+```
 
 ## 核心特性
 
@@ -147,25 +158,19 @@ curl -H "tenant: a" http://localhost:8080/note
 
 ## 数据库配置
 
-### H2 (默认 - 内存数据库)
+### PostgreSQL (默认)
 
-无需配置。应用启动时自动初始化数据库。
+默认配置使用 PostgreSQL，环境变量配置：
 
-### MySQL
-
-更新 `application.yml`:
-```yaml
-spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/ainote
-    username: root
-    password: your_password
+```bash
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=ainote
+export DB_USERNAME=postgres
+export DB_PASSWORD=your_password
 ```
 
-### PostgreSQL
-
-更新 `application.yml`:
+或直接修改 `application.yml`：
 ```yaml
 spring:
   datasource:
@@ -175,19 +180,50 @@ spring:
     password: your_password
 ```
 
+### MySQL
+
+修改 `application.yml`:
+```yaml
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/ainote
+    username: root
+    password: your_password
+```
+
+### H2 (内存数据库)
+
+修改 `application.yml`:
+```yaml
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+```
+
 ## 缓存配置 (可选)
 
 启用 Redis 缓存：
 
-1. 安装并启动 Redis 服务器
-2. 更新 `application.yml`:
-   ```yaml
-   spring:
-     redis:
-       host: localhost
-       port: 6379
-   ```
-3. 重启应用
+```bash
+export REDIS_HOST=localhost
+export REDIS_PORT=6379
+export REDIS_PASSWORD=  # 如果有密码
+```
+
+或修改 `application.yml`:
+```yaml
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    password:  # 如果需要
+```
+
+重启应用后生效。
 
 ## 生产构建
 
@@ -199,9 +235,26 @@ spring:
 
 ## 生产运行
 
+### Docker 运行
+
 ```bash
-java -jar service/build/libs/service-1.0.0.jar
+java -jar service/build/libs/service-1.0.0.jar \
+  -Dspring.profiles.active=prod \
+  -DDB_HOST=your-db-host \
+  -DDB_PORT=5432 \
+  -DDB_NAME=ainote \
+  -DDB_USERNAME=postgres \
+  -DDB_PASSWORD=your_password
 ```
+
+### 环境变量配置
+
+关键环境变量：
+- `SPRING_PROFILES_ACTIVE`: 应用配置文件 (默认: dev)
+- `SERVER_PORT`: 服务器端口 (默认: 8080)
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`: 数据库配置
+- `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`: Redis 缓存配置
+- `ALIYUN_OSS_ENDPOINT`, `ALIYUN_ACCESS_KEY_ID`, `ALIYUN_ACCESS_KEY_SECRET`, `ALIYUN_OSS_BUCKET`: Aliyun OSS 配置
 
 ## 测试
 
@@ -209,21 +262,49 @@ java -jar service/build/libs/service-1.0.0.jar
 ./gradlew test
 ```
 
-## 自定义配置
+## 项目实体说明
 
-本项目可作为模板使用。您可以：
+### 已实现的主要实体
 
-1. **删除示例实体**: 删除 `Note.kt`, `NoteRepository.kt`, `NoteService.kt`
-2. **添加自己的实体**: 参考示例文件的结构
-3. **禁用多租户**: 移除 `TenantAware` 接口和相关过滤器
-4. **自定义缓存**: 修改 `runtime/cache/CacheConfig.kt`
-5. **添加自定义拦截器**: 在 `runtime/interceptor/` 中创建新类
+- **Account**: 用户账户实体，包含认证信息
+- **Company**: 公司/组织实体
+- **AccountCompanyEntity**: 账户与公司的关联实体
+- **Note**: 笔记实体
+- **StaticFile**: 静态文件实体
+- **Log**: 操作日志实体
+
+## 扩展和自定义
+
+1. **添加新实体**: 参考 `model/` 中的示例实体结构
+2. **禁用多租户**: 移除 `TenantAware` 接口和相关过滤器
+3. **自定义缓存**: 修改 `runtime/src/main/kotlin/top/zztech/ainote/runtime/cache/CacheConfig.kt`
+4. **添加自定义拦截器**: 在 `runtime/src/main/kotlin/top/zztech/ainote/runtime/interceptor/` 中创建新类
+5. **修改 OSS 配置**: 编辑 `service/src/main/kotlin/top/zztech/ainote/cfg/OssConfig.kt`
+
+## 核心模块说明
+
+### model
+实体定义和基础类，包含公共审计字段、多租户支持、枚举定义等。
+
+### repository
+数据访问层，使用 Jimmer 的 KRepository 接口实现 Spring Data 风格的仓储。
+
+### runtime
+运行时配置和增强，包括：
+- 过滤器和拦截器 (自动填充审计字段、多租户隔离)
+- JWT 认证和授权
+- Redis 缓存配置
+- 安全工具类和 DTO 定义
+
+### service
+业务逻辑层和 REST 控制器，提供 API 端点和业务服务。
 
 ## 参考资源
 
 - [Jimmer 官方文档](https://babyfish-ct.github.io/jimmer-doc/)
 - [Spring Boot 文档](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
 - [Kotlin 文档](https://kotlinlang.org/docs/home.html)
+- [PostgreSQL 文档](https://www.postgresql.org/docs/)
 
 ## 许可证
 
