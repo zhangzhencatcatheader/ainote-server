@@ -1,0 +1,19 @@
+export top.zztech.ainote.model.StaticFile
+    -> package top.zztech.ainote.service.dto
+
+specification FileSpecification {
+    #allScalars(this) - id
+}
+
+input FileInput {
+    fileName
+    originalName
+    filePath
+    fileSize
+    mimeType
+    fileType
+}
+
+FileSave {
+    #allScalars(this)
+}

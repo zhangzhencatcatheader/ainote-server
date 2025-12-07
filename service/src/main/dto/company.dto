@@ -1,0 +1,7 @@
+export top.zztech.ainote.model.Company
+    -> package top.zztech.ainote.service.dto
+
+input CompanyAddInput {
+   #allScalars(this)
+     -id
+}

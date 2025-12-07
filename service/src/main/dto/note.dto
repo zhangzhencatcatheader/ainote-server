@@ -1,0 +1,7 @@
+export top.zztech.ainote.model.Note
+    -> package top.zztech.ainote.service.dto
+
+input CreateNote {
+    title
+    content
+}
