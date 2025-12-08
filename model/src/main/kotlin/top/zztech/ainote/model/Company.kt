@@ -3,6 +3,7 @@ package top.zztech.ainote.model
 import org.babyfish.jimmer.sql.*
 import org.babyfish.jimmer.sql.meta.UUIDIdGenerator
 import top.zztech.ainote.model.common.BaseEntity
+import top.zztech.ainote.model.common.TenantAware
 import top.zztech.ainote.model.enums.CompanyStatus
 import java.util.UUID
 
@@ -31,6 +32,9 @@ interface Company : BaseEntity {
     
     @Default(value = "1")
     val status: CompanyStatus
+
+    @Default(value = "abc")
+    val tenant: String
 
     @OneToMany(mappedBy = "company")
     val accountCompanies: List<AccountCompanyEntity>
