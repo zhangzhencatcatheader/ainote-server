@@ -14,6 +14,7 @@ import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.exception.SaveException
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.babyfish.jimmer.sql.kt.ast.expression.and
 import org.babyfish.jimmer.sql.kt.ast.mutation.KSimpleSaveResult
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.springframework.security.access.prepost.PreAuthorize
@@ -34,6 +35,7 @@ import top.zztech.ainote.model.AccountCompanyEntity
 import top.zztech.ainote.model.Company
 import top.zztech.ainote.model.by
 import top.zztech.ainote.model.username
+import top.zztech.ainote.repository.AccountCompanyRepository
 import top.zztech.ainote.repository.AccountRepository
 import top.zztech.ainote.runtime.dto.AuthResponse
 import top.zztech.ainote.runtime.utility.JwtTokenProvider
@@ -56,7 +58,8 @@ class AuthService(
     val sql: KSqlClient,
     val authenticationManager: AuthenticationManager,
     val jwtTokenProvider: JwtTokenProvider,
-    val passwordEncoder: PasswordEncoder
+    val passwordEncoder: PasswordEncoder,
+    val accountCompanyRepository: AccountCompanyRepository
 ) {
     /**
      * 用户登录
@@ -79,10 +82,17 @@ class AuthService(
             )
         )
 
+        // 查找用户是否有 choiceFlag = true 的 AccountCompany 记录
+        val selectedCompany =accountCompanyRepository.getChoiceCompanyByAccount(user.id,SIMPLE_ACCOUNT_COMPANY)
+
+        // 如果找到选择的公司，返回其 tenant；否则返回默认 "default"
+        val tenant = selectedCompany?.company?.tenant ?: "default"
+
         return AuthResponse(
             user.id,
             jwtTokenProvider.generateToken(input.username),
-            user.role.name
+            user.role.name,
+            tenant
         )
     }
 
@@ -103,10 +113,24 @@ class AuthService(
             return AuthResponse(
                 account.id,
                 jwtTokenProvider.generateToken(input.username),
-                account.role.name
+                account.role.name,
+                "default"
             )
         } catch (e: SaveException.NotUnique) {
             throw AccountException.usernameAlreadyExists()
+        }
+    }
+
+
+    companion object {
+        private  val SIMPLE_ACCOUNT_COMPANY = newFetcher(AccountCompanyEntity::class).by {
+            choiceFlag()
+            role()
+            company {
+                name()
+                tenant()
+            }
+
         }
     }
 } 

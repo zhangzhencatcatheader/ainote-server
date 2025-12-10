@@ -47,4 +47,5 @@ interface Account : BaseEntity {
         deeperProp = "company"
     )
     val companies: List<Company>
+
 }

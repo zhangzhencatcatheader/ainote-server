@@ -9,6 +9,7 @@
 package top.zztech.ainote.repository
 
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
+import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.springframework.stereotype.Repository
 import top.zztech.ainote.model.Account

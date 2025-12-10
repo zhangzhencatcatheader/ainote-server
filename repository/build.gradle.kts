@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	kotlin("jvm") version "2.1.20"
-	kotlin("plugin.allopen") version "2.1.20"
+	kotlin("jvm")
+	kotlin("plugin.allopen")
 }
 
 val jimmerVersion: String by rootProject.extra

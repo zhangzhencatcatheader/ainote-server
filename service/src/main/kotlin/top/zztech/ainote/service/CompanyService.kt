@@ -3,6 +3,7 @@ package top.zztech.ainote.service
 import org.babyfish.jimmer.Page
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
+import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
@@ -19,11 +20,13 @@ import top.zztech.ainote.runtime.annotation.LogOperation
 import top.zztech.ainote.runtime.utility.getCurrentAccountId
 import top.zztech.ainote.service.dto.CompanyAddInput
 import java.util.UUID
+import kotlin.random.Random
 
 @RestController
 @RequestMapping("/company")
 class CompanyService(
-    private val companyRepository: CompanyRepository
+    private val companyRepository: CompanyRepository,
+    private val sql: KSqlClient
 ) {
     /**
      * 获取全部企业
@@ -47,8 +50,14 @@ class CompanyService(
     @PreAuthorize("hasRole('ADMIN')")
     fun add(
         input: CompanyAddInput
-    ): UUID=
-        companyRepository.saveCommand(input, SaveMode.INSERT_ONLY).execute().modifiedEntity.id
+    ): UUID {
+        // 生成随机的 tenant，6位数字
+        val randomTenant = Random.nextInt(100000, 999999).toString()
+        // 直接保存并设置 tenant
+        return companyRepository.save( input.copy(tenant = randomTenant)) {
+            setMode(SaveMode.INSERT_ONLY)
+        }.modifiedEntity.id
+    }
 
     /**
      * 管理员删除企业

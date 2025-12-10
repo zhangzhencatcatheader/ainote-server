@@ -26,7 +26,8 @@ interface AccountCompanyEntity : PassiveEntity,BaseEntity {
     val id: UUID
     @Default("USER")
     val role: RoleEnum
-
+    @Default("true")
+    val choiceFlag : Boolean
     @ManyToOne
     val company: Company
 }

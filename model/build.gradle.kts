@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	kotlin("jvm") version "2.1.20"
-	id("com.google.devtools.ksp") version "2.1.20-2.0.0"
+	kotlin("jvm")
+	id("com.google.devtools.ksp")
 }
 
 val jimmerVersion: String by rootProject.extra

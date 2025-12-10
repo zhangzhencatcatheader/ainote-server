@@ -29,7 +29,7 @@ interface LedgerRecord : PassiveEntity, BaseEntity, TenantAware {
      * 所属模板
      */
     @ManyToOne
-    val template: LedgerTemplate
+    val template: LedgerTemplate?
 
     /**
      * 记录编号（可自定义规则生成）

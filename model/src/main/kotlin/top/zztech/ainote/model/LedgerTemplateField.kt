@@ -132,9 +132,4 @@ interface LedgerTemplateField : BaseEntity {
     @Default("false")
     val searchable: Boolean
 
-    /**
-     * 基于此字段的记录值集合
-     */
-    @OneToMany(mappedBy = "field")
-    val recordValues: List<LedgerRecordValue>
 }

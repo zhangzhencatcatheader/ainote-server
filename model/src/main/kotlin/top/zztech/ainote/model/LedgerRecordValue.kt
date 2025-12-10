@@ -3,6 +3,7 @@ package top.zztech.ainote.model
 import org.babyfish.jimmer.sql.*
 import org.babyfish.jimmer.sql.meta.UUIDIdGenerator
 import top.zztech.ainote.model.common.BaseEntity
+import top.zztech.ainote.model.dto.FieldDefinitionDto
 import java.util.UUID
 
 /**
@@ -29,14 +30,10 @@ interface LedgerRecordValue : BaseEntity {
     @Key
     @ManyToOne
     @OnDissociate(DissociateAction.DELETE)
+    @JoinColumn(name = "record_id")
     val record: LedgerRecord
 
-    /**
-     * 字段定义
-     */
-    @Key
-    @ManyToOne
-    val field: LedgerTemplateField
+    val fieldDefinition: FieldDefinitionDto
 
     /**
      * 字段值（所有类型统一存储为文本，前端根据 field.fieldType 解析）
