@@ -19,6 +19,7 @@ import org.babyfish.jimmer.sql.kt.ast.mutation.KSimpleSaveResult
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -69,25 +70,27 @@ class AuthService(
     @LogOperation(action = "LOGIN", entityType = "Account", includeRequest = true)
     @PostMapping("/login")
     @Transactional
+    @Throws(AccountException::class)
     fun login(input: LoginInput): AuthResponse {
         val user = sql.createQuery(Account::class) {
             where(table.username eq input.username)
             select(table)
         }.fetchOneOrNull() ?: throw AccountException.usernameDoesNotExist()
-
-        authenticationManager.authenticate(
-            UsernamePasswordAuthenticationToken(
-                input.username,
-                input.password
+        try {
+            authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken(
+                    input.username,
+                    input.password
+                )
             )
-        )
+        } catch (e: BadCredentialsException) {
+            throw AccountException.passwordIsError("账号或密码错误") // 使用你定义的 PASSWORD_IS_ERROR
+        }
 
         // 查找用户是否有 choiceFlag = true 的 AccountCompany 记录
         val selectedCompany =accountCompanyRepository.getChoiceCompanyByAccount(user.id,SIMPLE_ACCOUNT_COMPANY)
-
         // 如果找到选择的公司，返回其 tenant；否则返回默认 "default"
         val tenant = selectedCompany?.company?.tenant ?: "default"
-
         return AuthResponse(
             user.id,
             jwtTokenProvider.generateToken(input.username),

@@ -29,7 +29,7 @@ interface LedgerTemplateField : BaseEntity {
      */
     @ManyToOne
     @OnDissociate(DissociateAction.DELETE)
-    val template: LedgerTemplate
+    val template: LedgerTemplate?
 
     /**
      * 字段名称（英文标识），用于程序识别

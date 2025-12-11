@@ -31,7 +31,7 @@ interface LedgerRecordValue : BaseEntity {
     @ManyToOne
     @OnDissociate(DissociateAction.DELETE)
     @JoinColumn(name = "record_id")
-    val record: LedgerRecord
+    val record: LedgerRecord?
 
     val fieldDefinition: FieldDefinitionDto
 

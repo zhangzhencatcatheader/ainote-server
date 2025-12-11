@@ -1,8 +1,10 @@
 
 package top.zztech.ainote.cfg
 
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.MediaType
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -10,6 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer
+import org.springframework.security.config.annotation.web.configurers.ExceptionHandlingConfigurer
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -56,6 +59,21 @@ class JwtSecurityConfig(val jwtAuthenticationFilter: JwtAuthenticationFilter) {
                     .requestMatchers("/file/upload").permitAll()
                     // 其他所有接口需要 ADMIN 角色
                     .anyRequest().hasRole("ADMIN")
+            }
+            .exceptionHandling { exception: ExceptionHandlingConfigurer<HttpSecurity> ->
+                exception
+                    .authenticationEntryPoint { request, response, authException ->
+                        response.status = HttpServletResponse.SC_UNAUTHORIZED
+                        response.contentType = MediaType.APPLICATION_JSON_VALUE
+                        response.characterEncoding = "UTF-8"
+                        response.writer.write("""{"code": "UNAUTHORIZED", "message": "认证失败，请检查用户名和密码"}""")
+                    }
+                    .accessDeniedHandler { request, response, accessDeniedException ->
+                        response.status = HttpServletResponse.SC_FORBIDDEN
+                        response.contentType = MediaType.APPLICATION_JSON_VALUE
+                        response.characterEncoding = "UTF-8"
+                        response.writer.write("""{"code": "ACCESS_DENIED", "message": "权限不足"}""")
+                    }
             }
             .addFilterBefore(
                 jwtAuthenticationFilter,
