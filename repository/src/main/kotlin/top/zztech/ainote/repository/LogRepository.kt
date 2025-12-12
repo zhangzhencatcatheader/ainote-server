@@ -8,6 +8,7 @@
 
 package top.zztech.ainote.repository
 
+import org.babyfish.jimmer.Page
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.*
@@ -16,6 +17,7 @@ import top.zztech.ainote.model.Log
 import top.zztech.ainote.model.account
 import top.zztech.ainote.model.createdTime
 import top.zztech.ainote.model.id
+import top.zztech.ainote.model.dto.LogSpecification
 import java.util.UUID
 
 /**
@@ -50,4 +52,11 @@ class LogRepository(
             orderBy(table.createdTime.desc())
             select(table)
         }.limit(limit).execute()
+
+    fun findAllPage(pageNum:Int,pageSize:Int,specification: LogSpecification): Page<Log> =
+        createQuery {
+            where(specification)
+            orderBy(table.createdTime.desc())
+            select(table)
+    }.fetchPage(pageNum,pageSize)
 }

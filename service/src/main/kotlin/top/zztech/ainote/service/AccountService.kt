@@ -69,6 +69,7 @@ class AccountService(
         return accountRepository.findById(currentUserId,SIMPLE_ACCOUNT)
     }
 
+
     /**
      * 修改个人信息
      */

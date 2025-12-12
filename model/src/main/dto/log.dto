@@ -1,18 +1,6 @@
 export top.zztech.ainote.model.Log
     -> package top.zztech.ainote.model.dto
 
-specification LogSpecification {
-
-    /*
-     * For `QBE(Query By Example)`
-     *
-     * #allScalars: All scalar fields of `Author` and `BaseEntity`
-     *
-     * #allScalars(this)/#allScalars(Author):
-     *     All scalar fields of `Author`, exclude `BaseEntity`
-     */
-    #allScalars(this) - id // Remove id
-}
 
 input LogInput {
     #allScalars(this) - id

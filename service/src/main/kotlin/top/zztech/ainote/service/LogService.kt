@@ -8,11 +8,13 @@
 
 package top.zztech.ainote.service
 
+import org.babyfish.jimmer.Page
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import top.zztech.ainote.model.Log
+import top.zztech.ainote.model.dto.LogSpecification
 import top.zztech.ainote.repository.LogRepository
 import top.zztech.ainote.runtime.annotation.LogOperation
 import java.time.LocalDateTime
@@ -42,8 +44,12 @@ class LogService(
     @LogOperation(action = "QUERY_ALL_LOGS", entityType = "Log", includeRequest = false)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    fun findAll(): List<Log> =
-        logRepository.findAll()
+    fun findAll(
+                pageNum: Int,
+                pageSize: Int,
+                specification: LogSpecification
+    ): Page<Log> =
+        logRepository.findAllPage(pageNum,pageSize,specification)
 
     /**
      * 根据ID获取日志

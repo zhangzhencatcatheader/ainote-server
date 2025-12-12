@@ -1,0 +1,7 @@
+export top.zztech.ainote.model.Log
+    -> package top.zztech.ainote.service.dto
+specification LogSpecification {
+    requestMethod
+    requestUrl
+    responseStatus
+}
