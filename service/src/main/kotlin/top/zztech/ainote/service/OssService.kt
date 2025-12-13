@@ -76,7 +76,7 @@ class OssService(
         val staticFile = StaticFile {
             this.fileName = fileName
             this.originalName = originalFileName
-            this.filePath = filePath
+            this.filePath = fileUrl
             this.fileSize = file.size
             this.mimeType = mimeType
             this.fileType = fileType

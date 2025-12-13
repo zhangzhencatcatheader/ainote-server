@@ -32,6 +32,7 @@ import top.zztech.ainote.error.AccountException
 import top.zztech.ainote.model.Account
 import top.zztech.ainote.model.AccountCompanyEntity
 import top.zztech.ainote.model.Company
+import top.zztech.ainote.model.StaticFile
 import top.zztech.ainote.model.by
 import top.zztech.ainote.model.username
 import top.zztech.ainote.repository.AccountRepository
@@ -101,6 +102,12 @@ class AccountService(
            username()
            phone()
            role()
+           avatar{
+                   filePath()
+                   fileName()
+                   fileType()
+           }
+
            companies(
                newFetcher(Company::class).by {
                    name()

@@ -14,7 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import top.zztech.ainote.model.Log
-import top.zztech.ainote.model.dto.LogSpecification
+import top.zztech.ainote.service.dto.LogSpecification
 import top.zztech.ainote.repository.LogRepository
 import top.zztech.ainote.runtime.annotation.LogOperation
 import java.time.LocalDateTime

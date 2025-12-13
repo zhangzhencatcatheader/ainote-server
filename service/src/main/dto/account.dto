@@ -16,10 +16,7 @@ input UpdateInput {
     id?
     username,
     phone,
-    accountCompanies {
-        id(company) as companyId
-        role
-    }
+    id(avatar) as avatarId
 }
 
 input JoinCompany {

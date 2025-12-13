@@ -17,7 +17,7 @@ import top.zztech.ainote.model.Log
 import top.zztech.ainote.model.account
 import top.zztech.ainote.model.createdTime
 import top.zztech.ainote.model.id
-import top.zztech.ainote.model.dto.LogSpecification
+import org.babyfish.jimmer.Specification
 import java.util.UUID
 
 /**
@@ -53,7 +53,7 @@ class LogRepository(
             select(table)
         }.limit(limit).execute()
 
-    fun findAllPage(pageNum:Int,pageSize:Int,specification: LogSpecification): Page<Log> =
+    fun findAllPage(pageNum:Int,pageSize:Int,specification: Specification<Log>): Page<Log> =
         createQuery {
             where(specification)
             orderBy(table.createdTime.desc())

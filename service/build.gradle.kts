@@ -28,6 +28,7 @@ dependencies {
 
 	implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 	runtimeOnly("org.postgresql:postgresql:42.7.4")
 	runtimeOnly("io.lettuce:lettuce-core:6.4.2.RELEASE")
 	runtimeOnly("com.github.ben-manes.caffeine:caffeine:2.9.1")
