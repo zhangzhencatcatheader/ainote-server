@@ -39,10 +39,4 @@ interface Company : BaseEntity {
     @OneToMany(mappedBy = "company")
     val accountCompanies: List<AccountCompanyEntity>
 
-
-    @ManyToManyView(
-        prop = "accountCompanies",
-        deeperProp = "account"
-    )
-    val accounts: List<Account>
 }

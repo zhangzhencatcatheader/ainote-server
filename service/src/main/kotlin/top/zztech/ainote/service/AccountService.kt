@@ -107,22 +107,14 @@ class AccountService(
                    fileName()
                    fileType()
            }
-
-           companies(
-               newFetcher(Company::class).by {
-                   name()
-               }
-           )
-           accountCompanies(
-               newFetcher(AccountCompanyEntity::class).by {
-                   company(
-                       newFetcher(Company::class).by {
-                           name()
-                       }
-                   )
+           accountCompanies {
+                   choiceFlag()
                    role()
-               }
-           )
+                   company {
+                       tenant()
+                       name()
+                   }
+           }
       }
     }
 } 

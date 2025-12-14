@@ -6,6 +6,7 @@
 package top.zztech.ainote.repository
 
 import org.babyfish.jimmer.Page
+import org.babyfish.jimmer.Specification
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Repository
 import top.zztech.ainote.model.Company
 import top.zztech.ainote.model.accountCompanies
 import top.zztech.ainote.model.accountId
-import top.zztech.ainote.model.dto.CompanySearch
 import java.util.UUID
 
 @Repository
@@ -26,7 +26,7 @@ class CompanyRepository(
         pageIndex: Int,
         pageSize: Int,
         sort: String,
-        search: CompanySearch,
+        search: Specification<Company>,
         fetcher: Fetcher<Company>?
     ): Page<Company> =
         createQuery {

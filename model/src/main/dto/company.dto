@@ -1,7 +1,0 @@
-export top.zztech.ainote.model.Company
-    -> package top.zztech.ainote.model.dto
-
-specification CompanySearch {
-    like/i (name,code,address) as keywords
-    status
-}

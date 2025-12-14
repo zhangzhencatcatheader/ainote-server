@@ -8,10 +8,8 @@
 
 package top.zztech.ainote.service
 
-import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.springframework.security.access.prepost.PreAuthorize
-import top.zztech.ainote.model.Note
 import top.zztech.ainote.repository.NoteRepository
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*

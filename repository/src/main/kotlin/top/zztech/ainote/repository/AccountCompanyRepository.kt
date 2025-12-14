@@ -30,13 +30,6 @@ class AccountCompanyRepository(
     sql: KSqlClient
 ) : AbstractKotlinRepository<AccountCompanyEntity, UUID>(sql) {
 
-    fun getTenantByAccount(id: UUID): AccountCompanyEntity? =
-        sql.createQuery(AccountCompanyEntity::class) {
-        where(table.accountId eq id)
-            where(table.choiceFlag.eq(true))
-            select(table)
-        }.fetchOneOrNull()
-
     fun getChoiceCompanyByAccount(id: UUID, fetcher: Fetcher<AccountCompanyEntity>) =
         sql.createQuery(AccountCompanyEntity::class) {
             where(table.accountId eq id)

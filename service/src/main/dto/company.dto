@@ -5,3 +5,9 @@ input CompanyAddInput {
    #allScalars(this)
      -id
 }
+
+specification CompanySearch {
+    like/i(name, code) as keywords
+    like/i(contact)
+    status
+}

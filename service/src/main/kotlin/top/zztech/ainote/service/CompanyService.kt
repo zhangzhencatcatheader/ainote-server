@@ -3,7 +3,6 @@ package top.zztech.ainote.service
 import org.babyfish.jimmer.Page
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
-import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
@@ -15,18 +14,16 @@ import top.zztech.ainote.error.AccountException
 import top.zztech.ainote.model.Company
 import top.zztech.ainote.model.by
 import top.zztech.ainote.repository.CompanyRepository
-import top.zztech.ainote.model.dto.CompanySearch
 import top.zztech.ainote.runtime.annotation.LogOperation
 import top.zztech.ainote.runtime.utility.getCurrentAccountId
-import top.zztech.ainote.service.dto.CompanyAddInput
+import top.zztech.ainote.service.dto.*
 import java.util.UUID
 import kotlin.random.Random
 
 @RestController
 @RequestMapping("/company")
 class CompanyService(
-    private val companyRepository: CompanyRepository,
-    private val sql: KSqlClient
+    private val companyRepository: CompanyRepository
 ) {
     /**
      * 获取全部企业
@@ -96,6 +93,8 @@ class CompanyService(
             name()
             code()
             address()
+            tenant()
+            contact()
         }
 
         private val COMPANY_NAME = newFetcher(Company::class).by {
