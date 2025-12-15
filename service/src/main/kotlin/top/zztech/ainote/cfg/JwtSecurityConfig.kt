@@ -57,8 +57,8 @@ class JwtSecurityConfig(val jwtAuthenticationFilter: JwtAuthenticationFilter) {
                     .requestMatchers("/openapi.html", "/openapi.yml", "/ts.zip").permitAll()
                     // 可选认证：OSS上传接口（有无token都可以）
                     .requestMatchers("/file/upload").permitAll()
-                    // 其他所有接口需要 ADMIN 角色
-                    .anyRequest().hasRole("ADMIN")
+                    // 其他所有接口只要已认证即可，具体权限由各接口上的 @PreAuthorize 控制
+                    .anyRequest().authenticated()
             }
             .exceptionHandling { exception: ExceptionHandlingConfigurer<HttpSecurity> ->
                 exception

@@ -313,3 +313,11 @@ MIT License
 ## 作者
 
 zztech
+
+
+## todolist
+1. 笔记的crud，存储原始的资料
+2. springAi的接入
+3. qwen 的接入，模版的分解。
+4. 按照模版分解原始笔记，生成表单
+5. ？手机号注册和接入

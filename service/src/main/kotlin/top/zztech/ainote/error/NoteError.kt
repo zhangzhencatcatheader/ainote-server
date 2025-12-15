@@ -1,0 +1,22 @@
+
+package top.zztech.ainote.error
+
+import org.babyfish.jimmer.error.ErrorFamily
+
+
+@ErrorFamily
+enum class NoteError {
+    NOTE_NOT_FOUND,
+    NOTE_ALREADY_EXISTS,
+    NOTE_ACCESS_DENIED,
+    INVALID_NOTE_ID,
+    NOTE_TITLE_EMPTY,
+    NOTE_CONTENT_TOO_LARGE,
+    NOTE_CREATE_FAILED,
+    NOTE_UPDATE_FAILED,
+    NOTE_DELETE_FAILED,
+    NOTE_FILE_NOT_FOUND,
+    NOTE_FILE_LIMIT_EXCEEDED,
+    NOTE_ABOUT_ACCOUNT_NOT_FOUND,
+    NOTE_SEARCH_KEYWORD_TOO_LONG
+}

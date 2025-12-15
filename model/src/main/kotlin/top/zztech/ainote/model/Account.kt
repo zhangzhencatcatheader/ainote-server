@@ -6,6 +6,7 @@ import org.babyfish.jimmer.sql.GeneratedValue
 import org.babyfish.jimmer.sql.Id
 import org.babyfish.jimmer.sql.JoinColumn
 import org.babyfish.jimmer.sql.KeyUniqueConstraint
+import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.OneToOne
 import org.babyfish.jimmer.sql.ManyToManyView
 import org.babyfish.jimmer.sql.OneToMany
@@ -42,4 +43,10 @@ interface Account : BaseEntity {
     @OneToMany(mappedBy = "account")
     val accountCompanies: List<AccountCompanyEntity>
 
+
+    @OneToMany(mappedBy = "account")
+    val notes: List<Note>
+
+    @ManyToMany(mappedBy = "aboutAccount")
+    val aboutNotes: List<Note>
 }

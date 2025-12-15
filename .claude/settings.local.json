@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew:*)",
+      "mcp__ide__getDiagnostics",
+      "WebFetch(domain:babyfish-ct.github.io)",
+      "WebSearch",
+      "Bash(curl:*)"
+    ]
+  }
+}

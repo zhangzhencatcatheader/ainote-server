@@ -4,4 +4,11 @@ export top.zztech.ainote.model.Note
 input CreateNote {
     title
     content
+    id(files) as filesIds
+    id(aboutAccount) as aboutAccountIds
+}
+
+
+specification NoteSearch {
+    like/i(content,title) as keyword
 }

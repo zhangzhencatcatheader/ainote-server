@@ -34,7 +34,8 @@ dependencies {
 	runtimeOnly("com.github.ben-manes.caffeine:caffeine:2.9.1")
 	
 	implementation("com.aliyun.oss:aliyun-sdk-oss:3.18.1")
-
+	implementation(platform("org.springframework.ai:spring-ai-bom:1.0.0"))
+	implementation("com.alibaba.cloud.ai:spring-ai-alibaba-starter:1.0.0-M6.1")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
