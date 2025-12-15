@@ -18,6 +18,11 @@ input UpdateInput {
     phone,
     id(avatar) as avatarId
 }
+specification AccountSearch {
+    like/i(username,phone) as keyword
+    status
+    role
+}
 
 input JoinCompany {
     id?

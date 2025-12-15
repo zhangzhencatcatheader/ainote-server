@@ -8,11 +8,15 @@
 
 package top.zztech.ainote.repository
 
+import org.babyfish.jimmer.Page
+import org.babyfish.jimmer.Specification
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.table.makeOrders
 import org.springframework.stereotype.Repository
 import top.zztech.ainote.model.Account
+import top.zztech.ainote.model.Company
 import java.util.UUID
 
 /**
@@ -24,4 +28,16 @@ import java.util.UUID
 class AccountRepository(
     sql: KSqlClient
 ) : AbstractKotlinRepository<Account, UUID>(sql) {
+    fun findAllPage(
+        pageIndex: Int,
+        pageSize: Int,
+        sort: String,
+        search: Specification<Account>,
+        fetcher: Fetcher<Account>?
+    ): Page<Account> =
+        createQuery {
+            where(search)
+            orderBy(table.makeOrders(sort))
+            select(table.fetch(fetcher))
+        }.fetchPage(pageIndex,pageSize)
 }

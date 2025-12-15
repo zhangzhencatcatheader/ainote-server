@@ -39,12 +39,9 @@ class CompanyRepository(
         currentUserId: UUID,
         fetcher: Fetcher<Company>?): List<Company> =
     createQuery {
-        currentUserId.let {
-                where += table.accountCompanies {
-                    accountId.eq(currentUserId)
-                }
-            }
-
+        where (table.accountCompanies {
+            accountId.eq(currentUserId)
+        })
         select(table.fetch(fetcher))
     }.execute()
 }

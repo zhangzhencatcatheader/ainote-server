@@ -1,7 +1,0 @@
-export top.zztech.ainote.model.Log
-    -> package top.zztech.ainote.model.dto
-
-
-input LogInput {
-    #allScalars(this) - id
-}

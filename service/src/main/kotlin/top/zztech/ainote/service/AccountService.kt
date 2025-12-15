@@ -8,41 +8,29 @@
 
 package top.zztech.ainote.service
 
+import org.babyfish.jimmer.Page
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
-import org.babyfish.jimmer.sql.exception.SaveException
 import org.babyfish.jimmer.sql.kt.KSqlClient
-import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.ast.mutation.KSimpleSaveResult
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import top.zztech.ainote.error.AccountException
 import top.zztech.ainote.model.Account
-import top.zztech.ainote.model.AccountCompanyEntity
-import top.zztech.ainote.model.Company
-import top.zztech.ainote.model.StaticFile
 import top.zztech.ainote.model.by
-import top.zztech.ainote.model.username
 import top.zztech.ainote.repository.AccountRepository
-import top.zztech.ainote.runtime.dto.AuthResponse
-import top.zztech.ainote.runtime.utility.JwtTokenProvider
 import top.zztech.ainote.runtime.annotation.LogOperation
 import top.zztech.ainote.runtime.utility.getCurrentAccountId
+import top.zztech.ainote.service.dto.AccountSearch
 import top.zztech.ainote.service.dto.JoinCompany
-import top.zztech.ainote.service.dto.LoginInput
-import top.zztech.ainote.service.dto.RegisterInput
 import top.zztech.ainote.service.dto.UpdateInput
 import java.util.UUID
 
@@ -69,6 +57,18 @@ class AccountService(
             ?: throw AccountException.usernameDoesNotExist()
         return accountRepository.findById(currentUserId,SIMPLE_ACCOUNT)
     }
+
+    @LogOperation(action = "GET_ALL_ACCOUNT", entityType = "Account", includeRequest = false)
+    @GetMapping("/page")
+    @PreAuthorize("hasRole('ADMIN')")
+    fun page(
+        @RequestParam(defaultValue = "0") pageIndex: Int,
+        @RequestParam(defaultValue = "10") pageSize: Int,
+        @RequestParam(defaultValue = "name asc, createdTime desc") sortCode: String,
+        search: AccountSearch
+    ): Page<@FetchBy("SIMPLE_ACCOUNT") Account> =
+        accountRepository.findAllPage(pageIndex, pageSize, sortCode, search, SIMPLE_ACCOUNT)
+
 
 
     /**
