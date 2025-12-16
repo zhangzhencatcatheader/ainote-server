@@ -12,7 +12,6 @@ import org.babyfish.jimmer.Page
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
-import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.mutation.KSimpleSaveResult
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.springframework.security.access.prepost.PreAuthorize
@@ -43,7 +42,6 @@ import java.util.UUID
 @RestController
 @RequestMapping("/account")
 class AccountService(
-    val sql: KSqlClient,
     val accountRepository: AccountRepository
 ) {
 
@@ -94,7 +92,7 @@ class AccountService(
         val currentUserId = getCurrentAccountId()
             ?: throw AccountException.usernameDoesNotExist()
         val modifiedInput = input.copy(id = currentUserId)
-        return sql.saveCommand(modifiedInput, SaveMode.UPDATE_ONLY, AssociatedSaveMode.APPEND).execute().modifiedEntity.id
+        return accountRepository.saveCommand(modifiedInput, SaveMode.UPDATE_ONLY, AssociatedSaveMode.APPEND).execute().modifiedEntity.id
     }
 
     /**
