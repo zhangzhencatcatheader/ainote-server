@@ -22,6 +22,13 @@ import java.util.UUID
 class CompanyRepository(
     sql: KSqlClient
 ) : AbstractKotlinRepository<Company, UUID>(sql) {
+    fun findAll(
+        fetcher: Fetcher<Company>?
+    ): List<Company> =
+        createQuery {
+            select(table.fetch(fetcher))
+        }.execute()
+
     fun findAllPage(
         pageIndex: Int,
         pageSize: Int,

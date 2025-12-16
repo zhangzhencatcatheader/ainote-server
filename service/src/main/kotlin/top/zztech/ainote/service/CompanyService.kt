@@ -82,6 +82,12 @@ class CompanyService(
        return companyRepository.findAllByAccountId(currentUserId, COMPANY_NAME)
     }
 
+    @GetMapping("/names")
+    @LogOperation(action = "QUERY_COMPANY_NAMES", entityType = "Company", includeRequest = false)
+    @PreAuthorize("isAuthenticated()")
+    fun allCompanyNames(): List<@FetchBy("COMPANY_NAME") Company> =
+        companyRepository.findAll(COMPANY_NAME)
+
     /**
      * 切换企业
      */
