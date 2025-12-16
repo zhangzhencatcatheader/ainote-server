@@ -56,7 +56,9 @@ interface LedgerTemplate : PassiveEntity, BaseEntity, TenantAware {
     /**
      * 图标名称或URL
      */
-    val icon: String?
+    @OneToOne()
+    @JoinColumn(name = "icon_id")
+    val icon: StaticFile?
 
     @OneToOne()
     @JoinColumn(name = "file_id")

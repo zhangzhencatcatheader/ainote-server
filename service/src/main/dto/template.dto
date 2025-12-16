@@ -1,0 +1,23 @@
+export top.zztech.ainote.model.LedgerTemplate
+    -> package top.zztech.ainote.service.dto
+
+input CreateTemplate {
+    name,
+    description,
+    category,
+    id(icon) as iconFileId
+    id(file) as fileId
+    sortOrder
+    color
+}
+
+specification SearchTemplate {
+    like/i(name,description) as keyword
+    category
+    enabled
+}
+
+input ChangeTemplateStatus {
+    id
+    enabled
+}

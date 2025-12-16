@@ -14,21 +14,22 @@ import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.ast.table.makeOrders
 import org.springframework.stereotype.Repository
 import top.zztech.ainote.model.Company
+import top.zztech.ainote.model.LedgerTemplate
 import top.zztech.ainote.model.accountCompanies
 import top.zztech.ainote.model.accountId
 import java.util.UUID
 
 @Repository
-class CompanyRepository(
+class LedgerTemplateRepository(
     sql: KSqlClient
-) : AbstractKotlinRepository<Company, UUID>(sql) {
+) : AbstractKotlinRepository<LedgerTemplate, UUID>(sql) {
     fun findAllPage(
         pageIndex: Int,
         pageSize: Int,
         sort: String,
-        search: Specification<Company>,
-        fetcher: Fetcher<Company>?
-    ): Page<Company> =
+        search: Specification<LedgerTemplate>?,
+        fetcher: Fetcher<LedgerTemplate>?
+    ): Page<LedgerTemplate> =
         createQuery {
             where(search)
             orderBy(table.makeOrders(sort))
@@ -36,12 +37,16 @@ class CompanyRepository(
         }.fetchPage(pageIndex,pageSize)
 
     fun findAllByAccountId(
+        pageIndex: Int,
+        pageSize: Int,
+        sort: String,
         currentUserId: UUID,
-        fetcher: Fetcher<Company>?): List<Company> =
+        search: Specification<LedgerTemplate>?,
+        fetcher: Fetcher<LedgerTemplate>?): Page<LedgerTemplate> =
     createQuery {
-        where (table.accountCompanies {
-            accountId.eq(currentUserId)
-        })
+        where (table.accountId.eq(currentUserId))
+        orderBy(table.makeOrders(sort))
+        where(search)
         select(table.fetch(fetcher))
-    }.execute()
+    }.fetchPage(pageIndex,pageSize)
 }
