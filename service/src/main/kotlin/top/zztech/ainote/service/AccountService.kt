@@ -30,6 +30,7 @@ import top.zztech.ainote.repository.AccountRepository
 import top.zztech.ainote.runtime.annotation.LogOperation
 import top.zztech.ainote.runtime.utility.getCurrentAccountId
 import top.zztech.ainote.service.dto.AccountSearch
+import top.zztech.ainote.service.dto.ChangeAccountStatusInput
 import top.zztech.ainote.service.dto.JoinCompany
 import top.zztech.ainote.service.dto.UpdateInput
 import java.util.UUID
@@ -64,7 +65,7 @@ class AccountService(
     fun page(
         @RequestParam(defaultValue = "0") pageIndex: Int,
         @RequestParam(defaultValue = "10") pageSize: Int,
-        @RequestParam(defaultValue = "name asc, createdTime desc") sortCode: String,
+        @RequestParam(defaultValue = "username asc, createdTime desc") sortCode: String,
         search: AccountSearch
     ): Page<@FetchBy("SIMPLE_ACCOUNT") Account> =
         accountRepository.findAllPage(pageIndex, pageSize, sortCode, search, SIMPLE_ACCOUNT)
@@ -96,12 +97,22 @@ class AccountService(
         return sql.saveCommand(modifiedInput, SaveMode.UPDATE_ONLY, AssociatedSaveMode.APPEND).execute().modifiedEntity.id
     }
 
+    /**
+     * 修改用户状态
+     */
+    @LogOperation(action = "changeStatus", entityType = "Account",includeRequest = true)
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/changeStatus")
+    fun changeStatus(@RequestBody input: ChangeAccountStatusInput): KSimpleSaveResult<Account> {
+        return accountRepository.saveCommand(input, SaveMode.UPDATE_ONLY).execute();
+    }
 
     companion object {
       private  val SIMPLE_ACCOUNT = newFetcher(Account::class).by {
            username()
            phone()
            role()
+           status()
            avatar{
                    filePath()
                    fileName()

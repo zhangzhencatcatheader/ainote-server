@@ -11,6 +11,15 @@ input CreateTemplate {
     color
 }
 
+input UpdateTemplate{
+    id,
+    fields {
+        #allScalars(this)
+    }
+}
+
+
+
 specification SearchTemplate {
     like/i(name,description) as keyword
     category

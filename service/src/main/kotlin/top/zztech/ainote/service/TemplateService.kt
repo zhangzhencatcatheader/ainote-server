@@ -24,7 +24,9 @@ import top.zztech.ainote.runtime.annotation.LogOperation
 import top.zztech.ainote.runtime.utility.getCurrentAccountId
 import top.zztech.ainote.service.dto.ChangeTemplateStatus
 import top.zztech.ainote.service.dto.CreateTemplate
+import top.zztech.ainote.service.dto.CreateTemplateField
 import top.zztech.ainote.service.dto.SearchTemplate
+import top.zztech.ainote.service.dto.UpdateTemplate
 import java.util.UUID
 
 /**
@@ -34,7 +36,8 @@ import java.util.UUID
 @RequestMapping("/template")
 @Transactional
 class TemplateService(
-    private val templateRepository: LedgerTemplateRepository
+    private val templateRepository: LedgerTemplateRepository,
+    private val aiService: AiService
 ) {
     /**
      * 创建模板
@@ -48,6 +51,26 @@ class TemplateService(
         }
         return templateRepository.saveCommand(input, SaveMode.INSERT_ONLY).execute().modifiedEntity.id
     }
+    /**
+     * ai识别文档生成字段
+     */
+    @PostMapping("/generateFields")
+    @LogOperation(action = "AI_GENERATE_TEMPLATE_FIELDS", entityType = "LedgerTemplateField", includeRequest = true)
+    @PreAuthorize("isAuthenticated()")
+    fun generateFields(@RequestBody input: CreateTemplate): List<CreateTemplateField> {
+        return aiService.generateTemplateFieldsByAi(input)
+    }
+
+    /**
+    * 确认字段创建
+    **/
+    @PostMapping("/updateFields")
+    @LogOperation(action = "AI_GENERATE_TEMPLATE_FIELDS", entityType = "LedgerTemplateField", includeRequest = true)
+    @PreAuthorize("isAuthenticated()")
+    fun createFields(@RequestBody input: UpdateTemplate) : UUID{
+        return templateRepository.saveCommand(input,SaveMode.UPDATE_ONLY).execute().modifiedEntity.id
+    }
+
 
     /**
      * 我的模板page
@@ -63,7 +86,7 @@ class TemplateService(
         @RequestParam(defaultValue = "0") pageIndex: Int,
         @RequestParam(defaultValue = "10") pageSize: Int,
         @RequestParam(defaultValue = "createdTime desc") sort: String,
-        search: SearchTemplate?
+        search: SearchTemplate
     ): Page<@FetchBy("LIST_TEMPLATE") LedgerTemplate> {
         val currentUserId = getCurrentAccountId()
             ?: throw AccountException.usernameDoesNotExist()
@@ -87,7 +110,7 @@ class TemplateService(
         @RequestParam(defaultValue = "0") pageIndex: Int,
         @RequestParam(defaultValue = "10") pageSize: Int,
         @RequestParam(defaultValue = "createdTime desc") sort: String,
-         search: SearchTemplate?
+         search: SearchTemplate
     ): Page<@FetchBy("LIST_TEMPLATE") LedgerTemplate> {
             
         return templateRepository.findAllPage(
@@ -145,6 +168,8 @@ class TemplateService(
             icon {
                 allScalarFields()
             }
+            file()
+            fields()
         }
 
         private val SIMPLE_TEMPLATE= newFetcher(LedgerTemplate::class).by {
@@ -153,13 +178,17 @@ class TemplateService(
             description()
             enabled()
             icon {
-                allScalarFields()
+                filePath()
             }
             file {
-                allScalarFields()
+                filePath()
             }
             fields {
-                allScalarFields()
+                fieldName()
+                fieldLabel()
+                fieldOptions()
+                fieldType()
+                required()
             }
             color()
 

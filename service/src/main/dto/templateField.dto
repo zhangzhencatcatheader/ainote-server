@@ -1,0 +1,24 @@
+export top.zztech.ainote.model.LedgerTemplateField
+    -> package top.zztech.ainote.service.dto
+
+input CreateTemplateField {
+    id(template) as templateId
+    fieldName
+    fieldLabel
+    fieldType
+    fieldOptions
+    defaultValue
+    placeholder
+    helpText
+    required
+    minLength
+    maxLength
+    minValue
+    maxValue
+    pattern
+    sortOrder
+    width
+    visible
+    editable
+    searchable
+}

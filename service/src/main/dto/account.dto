@@ -12,6 +12,11 @@ input  RegisterInput {
     password
 }
 
+input ChangeAccountStatusInput {
+    id
+    status
+}
+
 input UpdateInput {
     id?
     username,

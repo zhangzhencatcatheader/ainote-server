@@ -186,6 +186,104 @@ Content-Type: application/json
 }
 ```
 
+## 模板 API（台账模板）
+
+### 创建模板
+
+**POST** `/template/add`
+
+创建新的台账模板。
+
+**请求头：**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+tenant: {tenant_id}
+```
+
+**请求体：**
+```json
+{
+  "name": "安全生产巡查台账",
+  "description": "用于记录巡查情况",
+  "category": "safety",
+  "iconFileId": "550e8400-e29b-41d4-a716-446655440010",
+  "fileId": "550e8400-e29b-41d4-a716-446655440011",
+  "sortOrder": 0,
+  "color": "#1677ff"
+}
+```
+
+**响应：**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440012"
+}
+```
+
+### 获取我可见的模板分页
+
+**GET** `/template/myTemplatePage`
+
+按当前用户维度筛选可见模板（通常用于“我的模板”列表）。
+
+**查询参数：**
+- `pageIndex`: 页码（默认：0）
+- `pageSize`: 每页大小（默认：10）
+- `sort`: 排序规则（默认："createdTime desc"）
+- `keyword`: 关键词（匹配 name/description，来自 `SearchTemplate`）
+- `category`: 分类（来自 `SearchTemplate`）
+- `enabled`: 启用状态（来自 `SearchTemplate`）
+
+**响应：**
+返回 `Page<LedgerTemplate>`，字段由 `LIST_TEMPLATE` Fetcher 控制（如：name/category/description/enabled/icon）。
+
+### 获取租户下全部模板分页
+
+**GET** `/template/tenantTemplatePage`
+
+查询当前租户下的模板列表（不按用户筛选）。
+
+**查询参数：**同 `myTemplatePage`
+
+**响应：**
+返回 `Page<LedgerTemplate>`，字段由 `LIST_TEMPLATE` Fetcher 控制。
+
+### 获取模板详情
+
+**GET** `/template/{id}`
+
+获取单个模板详情。
+
+**路径参数：**
+- `id`: 模板 ID
+
+**响应：**
+返回 `LedgerTemplate`，字段由 `SIMPLE_TEMPLATE` Fetcher 控制（包含：icon/file/fields/color 等）。
+
+### 修改模板启用状态
+
+**PUT** `/template/changeStatus`
+
+启用/禁用模板。
+
+**请求体：**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440012",
+  "enabled": true
+}
+```
+
+### 删除模板
+
+**DELETE** `/template/{id}`
+
+删除模板。
+
+**路径参数：**
+- `id`: 模板 ID
+
 ## 文件存储 API
 
 ### 上传文件
@@ -399,6 +497,19 @@ Content-Type: application/json
 | 404 | 资源不存在 | 笔记 ID 不存在 |
 | 409 | 资源冲突 | 用户名已存在 |
 | 500 | 服务器内部错误 | 数据库连接失败 |
+
+### 模板模块错误码（`TemplateError`）
+
+模板（台账模板）相关业务异常会使用 `TemplateError` 表达错误语义，常见枚举值：
+
+- **`TEMPLATE_NOT_FOUND`**
+- **`INVALID_TEMPLATE_ID`**
+- **`TEMPLATE_NAME_EMPTY`**
+- **`TEMPLATE_ALREADY_EXISTS`**
+- **`TEMPLATE_DISABLED`**
+- **`TEMPLATE_CREATE_FAILED`**
+- **`TEMPLATE_UPDATE_FAILED`**
+- **`TEMPLATE_DELETE_FAILED`**
 
 ## 多租户支持
 

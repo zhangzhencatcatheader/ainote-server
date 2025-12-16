@@ -28,6 +28,7 @@ dependencies {
 
 	implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 	runtimeOnly("org.postgresql:postgresql:42.7.4")
 	runtimeOnly("io.lettuce:lettuce-core:6.4.2.RELEASE")
@@ -36,6 +37,7 @@ dependencies {
 	implementation("com.aliyun.oss:aliyun-sdk-oss:3.18.1")
 	implementation(platform("org.springframework.ai:spring-ai-bom:1.0.0"))
 	implementation("com.alibaba.cloud.ai:spring-ai-alibaba-starter:1.0.0-M6.1")
+	implementation("com.openai:openai-java:4.12.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
