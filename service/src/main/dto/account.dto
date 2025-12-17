@@ -3,13 +3,17 @@ export top.zztech.ainote.model.Account
 
 input LoginInput {
     username,
-    password
+    password,
+    verCode:String,
+    verKey:String
 }
 
 input  RegisterInput {
     username,
     phone,
-    password
+    password,
+    verCode:String,
+    verKey:String
 }
 
 input ChangeAccountStatusInput {

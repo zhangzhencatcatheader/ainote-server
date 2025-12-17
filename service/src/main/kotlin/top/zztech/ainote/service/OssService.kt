@@ -49,6 +49,7 @@ class OssService(
      */
     @LogOperation(action = "UPLOAD_FILE", entityType = "StaticFile", includeRequest = true)
     @PostMapping("/upload")
+    @PreAuthorize("isAuthenticated()")
     fun uploadFile(file: MultipartFile, @RequestParam(defaultValue = "") folder: String): StaticFile {
         if (ossClient == null) {
             throw IllegalStateException("OSS服务未配置，无法上传文件")

@@ -8,22 +8,19 @@
 
 package top.zztech.ainote.service
 
-import org.babyfish.jimmer.client.FetchBy
-import org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode
+import cn.hutool.captcha.CaptchaUtil
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.exception.SaveException
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
-import org.babyfish.jimmer.sql.kt.ast.expression.and
-import org.babyfish.jimmer.sql.kt.ast.mutation.KSimpleSaveResult
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
-import org.springframework.security.access.prepost.PreAuthorize
+import org.redisson.api.RedissonClient
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -31,20 +28,16 @@ import org.springframework.web.bind.annotation.RestController
 import top.zztech.ainote.error.AccountException
 import top.zztech.ainote.model.Account
 import top.zztech.ainote.model.AccountCompanyEntity
-import top.zztech.ainote.model.Company
 import top.zztech.ainote.model.by
 import top.zztech.ainote.model.username
 import top.zztech.ainote.repository.AccountCompanyRepository
-import top.zztech.ainote.repository.AccountRepository
+import top.zztech.ainote.runtime.annotation.LogOperation
 import top.zztech.ainote.runtime.dto.AuthResponse
 import top.zztech.ainote.runtime.utility.JwtTokenProvider
-import top.zztech.ainote.runtime.annotation.LogOperation
-import top.zztech.ainote.runtime.utility.getCurrentAccountId
-import top.zztech.ainote.service.dto.JoinCompany
 import top.zztech.ainote.service.dto.LoginInput
 import top.zztech.ainote.service.dto.RegisterInput
-import top.zztech.ainote.service.dto.UpdateInput
-import java.util.UUID
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * 认证服务
@@ -58,7 +51,8 @@ class AuthService(
     val authenticationManager: AuthenticationManager,
     val jwtTokenProvider: JwtTokenProvider,
     val passwordEncoder: PasswordEncoder,
-    val accountCompanyRepository: AccountCompanyRepository
+    val accountCompanyRepository: AccountCompanyRepository,
+    val redissonClient: RedissonClient
 ) {
     /**
      * 用户登录
@@ -70,6 +64,7 @@ class AuthService(
     @Transactional
     @Throws(AccountException::class)
     fun login(@RequestBody input: LoginInput): AuthResponse {
+        requireCaptchaOk(input.verCode, input.verKey)
         val user = sql.createQuery(Account::class) {
             where(table.username eq input.username)
             select(table)
@@ -107,6 +102,8 @@ class AuthService(
     @PostMapping("/register")
     fun register(@RequestBody input: RegisterInput): AuthResponse {
         try {
+            requireCaptchaOk(input.verCode, input.verKey)
+
             val account = sql.save(input.copy(password = passwordEncoder.encode(input.password))) {
                 setMode(SaveMode.INSERT_ONLY)
             }.modifiedEntity
@@ -122,8 +119,46 @@ class AuthService(
         }
     }
 
+    @GetMapping("/captcha")
+    fun captcha(): CaptchaResponse {
+        val lineCaptcha = CaptchaUtil.createLineCaptcha(200, 100)
+        val key = UUID.randomUUID().toString()
+        redissonClient.getBucket<String>(CAPTCHA_REDIS_KEY_PREFIX + key)
+            .set(lineCaptcha.getCode().trim().lowercase(), CAPTCHA_TTL_MINUTES, TimeUnit.MINUTES)
+        return CaptchaResponse(
+            key = key,
+            image = lineCaptcha.imageBase64Data
+        )
+    }
+
+    private fun requireCaptchaOk(verCode: String?, verKey: String?) {
+        if (!captchaIsTrue(verCode, verKey)) {
+            throw AccountException.captchaIsError()
+        }
+    }
+
+    private fun captchaIsTrue(verCode: String?, verKey: String?): Boolean {
+        if (verCode.isNullOrBlank() || verKey.isNullOrBlank()) {
+            return false
+        }
+        val bucket = redissonClient.getBucket<String>(CAPTCHA_REDIS_KEY_PREFIX + verKey)
+        val redisCode = bucket.get()
+        val ok = !redisCode.isNullOrBlank() && redisCode.trim().equals(verCode.trim(), ignoreCase = true)
+        if (ok) {
+            bucket.delete()
+        }
+        return ok
+    }
+
+    data class CaptchaResponse(
+        val key: String,
+        val image: String
+    )
 
     companion object {
+        private const val CAPTCHA_REDIS_KEY_PREFIX = "captcha:"
+        private const val CAPTCHA_TTL_MINUTES: Long = 30
+
         private  val SIMPLE_ACCOUNT_COMPANY = newFetcher(AccountCompanyEntity::class).by {
             choiceFlag()
             role()

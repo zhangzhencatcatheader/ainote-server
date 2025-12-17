@@ -52,7 +52,7 @@ class JwtSecurityConfig(val jwtAuthenticationFilter: JwtAuthenticationFilter) {
             .authorizeHttpRequests { auth: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry ->
                 auth
                     // 公开访问：登录和注册接口
-                    .requestMatchers("/auth/login", "/auth/register").permitAll()
+                    .requestMatchers("/auth/login", "/auth/register","/auth/captcha").permitAll()
                     // 公开访问：OpenAPI 文档和客户端
                     .requestMatchers("/openapi.html", "/openapi.yml", "/ts.zip").permitAll()
                     // 可选认证：OSS上传接口（有无token都可以）
