@@ -24,9 +24,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -71,7 +69,7 @@ class AuthService(
     @PostMapping("/login")
     @Transactional
     @Throws(AccountException::class)
-    fun login(input: LoginInput): AuthResponse {
+    fun login(@RequestBody input: LoginInput): AuthResponse {
         val user = sql.createQuery(Account::class) {
             where(table.username eq input.username)
             select(table)
@@ -107,7 +105,7 @@ class AuthService(
     @LogOperation(action = "REGISTER", entityType = "Account", includeRequest = true)
     @Transactional
     @PostMapping("/register")
-    fun register(input: RegisterInput): AuthResponse {
+    fun register(@RequestBody input: RegisterInput): AuthResponse {
         try {
             val account = sql.save(input.copy(password = passwordEncoder.encode(input.password))) {
                 setMode(SaveMode.INSERT_ONLY)

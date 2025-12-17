@@ -15,6 +15,7 @@ import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.ast.mutation.KSimpleSaveResult
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -76,6 +77,7 @@ class AccountService(
     @LogOperation(action = "UPDATE_MY_INFO", entityType = "Account", includeRequest = true)
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/update")
+    @Transactional
     fun update(@RequestBody updateInput: UpdateInput): KSimpleSaveResult<Account> {
         val currentUserId = getCurrentAccountId()
             ?: throw AccountException.usernameDoesNotExist()
@@ -88,6 +90,7 @@ class AccountService(
     @LogOperation(action = "JOIN_COMPANY", entityType = "Account", includeRequest = true)
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/joinCompany")
+    @Transactional
     fun joinCompany(@RequestBody input: JoinCompany) : UUID {
         val currentUserId = getCurrentAccountId()
             ?: throw AccountException.usernameDoesNotExist()
@@ -101,6 +104,7 @@ class AccountService(
     @LogOperation(action = "changeStatus", entityType = "Account",includeRequest = true)
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/changeStatus")
+    @Transactional
     fun changeStatus(@RequestBody input: ChangeAccountStatusInput): KSimpleSaveResult<Account> {
         return accountRepository.saveCommand(input, SaveMode.UPDATE_ONLY).execute();
     }

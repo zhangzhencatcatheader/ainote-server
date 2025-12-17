@@ -5,6 +5,7 @@ import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -45,6 +46,7 @@ class CompanyService(
     @PostMapping("/add")
     @LogOperation(action = "ADD_COMPANY", entityType = "Company", includeRequest = true)
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     fun add(
         input: CompanyAddInput
     ): UUID {
@@ -62,6 +64,7 @@ class CompanyService(
     @PostMapping("/delete")
     @LogOperation(action = "DELETE_COMPANY", entityType = "Company", includeRequest = true)
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     fun delete(
         id: UUID
     ) {

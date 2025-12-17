@@ -39,6 +39,9 @@ jimmer:
   database-validation-mode: ERROR
   show-sql: true
   pretty-sql: true
+  trigger-type: TRANSACTION_ONLY
+  transaction-cache-operator-fixed-delay: 5000
+  dialect: org.babyfish.jimmer.sql.dialect.PostgresDialect
   
   client:
     ts:
