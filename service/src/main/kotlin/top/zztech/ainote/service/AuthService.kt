@@ -19,6 +19,7 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -29,12 +30,16 @@ import top.zztech.ainote.error.AccountException
 import top.zztech.ainote.model.Account
 import top.zztech.ainote.model.AccountCompanyEntity
 import top.zztech.ainote.model.by
+import top.zztech.ainote.model.phone
 import top.zztech.ainote.model.username
 import top.zztech.ainote.repository.AccountCompanyRepository
 import top.zztech.ainote.runtime.annotation.LogOperation
 import top.zztech.ainote.runtime.dto.AuthResponse
 import top.zztech.ainote.runtime.utility.JwtTokenProvider
+import top.zztech.ainote.integration.sms.SmsVerifyCodeService
 import top.zztech.ainote.service.dto.LoginInput
+import top.zztech.ainote.service.dto.SendSmsCodeInput
+import top.zztech.ainote.service.dto.SmsLoginInput
 import top.zztech.ainote.service.dto.RegisterInput
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -52,7 +57,8 @@ class AuthService(
     val jwtTokenProvider: JwtTokenProvider,
     val passwordEncoder: PasswordEncoder,
     val accountCompanyRepository: AccountCompanyRepository,
-    val redissonClient: RedissonClient
+    val redissonClient: RedissonClient,
+    val smsVerifyCodeServiceProvider: ObjectProvider<SmsVerifyCodeService>
 ) {
     /**
      * 用户登录
@@ -117,6 +123,38 @@ class AuthService(
         } catch (e: SaveException.NotUnique) {
             throw AccountException.usernameAlreadyExists()
         }
+    }
+
+    @LogOperation(action = "SEND_SMS_CODE", entityType = "Account", includeRequest = true)
+    @PostMapping("/sms/send")
+    fun sendSms(@RequestBody input: SendSmsCodeInput): SmsVerifyCodeService.SmsSendResult {
+        val svc = smsVerifyCodeServiceProvider.ifAvailable
+            ?: throw AccountException.smsCodeIsError("短信服务未配置")
+        return svc.send(input.scene, input.phone)
+    }
+
+    @LogOperation(action = "SMS_LOGIN", entityType = "Account", includeRequest = true)
+    @PostMapping("/sms/login")
+    @Transactional
+    fun smsLogin(@RequestBody input: SmsLoginInput): AuthResponse {
+        val svc = smsVerifyCodeServiceProvider.ifAvailable
+            ?: throw AccountException.smsCodeIsError("短信服务未配置")
+        svc.verify(input.scene, input.phone, input.code)
+
+        val user = sql.createQuery(Account::class) {
+            where(table.phone eq input.phone)
+            select(table)
+        }.fetchOneOrNull() ?: throw AccountException.phoneDoesNotExist()
+
+        val selectedCompany = accountCompanyRepository.getChoiceCompanyByAccount(user.id, SIMPLE_ACCOUNT_COMPANY)
+        val tenant = selectedCompany?.company?.tenant ?: "default"
+
+        return AuthResponse(
+            user.id,
+            jwtTokenProvider.generateToken(user.username),
+            user.role.name,
+            tenant
+        )
     }
 
     @GetMapping("/captcha")

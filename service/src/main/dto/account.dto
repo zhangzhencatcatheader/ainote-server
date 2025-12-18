@@ -8,6 +8,17 @@ input LoginInput {
     verKey:String
 }
 
+input SendSmsCodeInput {
+    phone:String,
+    scene:String
+}
+
+input SmsLoginInput {
+    phone:String,
+    code:String,
+    scene:String
+}
+
 input  RegisterInput {
     username,
     phone,

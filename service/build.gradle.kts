@@ -38,6 +38,7 @@ dependencies {
 	implementation(platform("org.springframework.ai:spring-ai-bom:1.0.0"))
 	implementation("com.alibaba.cloud.ai:spring-ai-alibaba-starter:1.0.0-M6.1")
 	implementation("cn.hutool:hutool-captcha:5.8.42")
+	implementation("com.aliyun:dypnsapi20170525:2.0.0")
 	implementation("org.redisson:redisson-spring-boot-starter:3.52.0")
 	implementation("com.openai:openai-java:4.12.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

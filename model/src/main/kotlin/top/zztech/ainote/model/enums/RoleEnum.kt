@@ -5,5 +5,6 @@ import org.babyfish.jimmer.sql.EnumType
 @EnumType(EnumType.Strategy.NAME)
 enum class RoleEnum {
     ADMIN,
+    COMPANYADMIN,
     USER
 }

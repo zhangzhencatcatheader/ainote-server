@@ -31,6 +31,17 @@ aliyun:
     access-key-id: ${ALIYUN_ACCESS_KEY_ID:}
     access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:}
     bucket-name: ${ALIYUN_OSS_BUCKET:}
+  pnvs:
+    sms:
+      region: ${ALIYUN_PNVS_SMS_REGION:cn-shanghai}
+      endpoint: ${ALIYUN_PNVS_SMS_ENDPOINT:dypnsapi.aliyuncs.com}
+      access-key-id: ${ALIYUN_PNVS_ACCESS_KEY_ID:}
+      access-key-secret: ${ALIYUN_PNVS_ACCESS_KEY_SECRET:}
+      sign-name: ${ALIYUN_PNVS_SMS_SIGN_NAME:}
+      template-code: ${ALIYUN_PNVS_SMS_TEMPLATE_CODE:}
+      code-length: ${ALIYUN_PNVS_SMS_CODE_LENGTH:4}
+      valid-time-seconds: ${ALIYUN_PNVS_SMS_VALID_TIME_SECONDS:300}
+      min-send-interval-seconds: ${ALIYUN_PNVS_SMS_MIN_SEND_INTERVAL_SECONDS:60}
 
 jimmer:
   language: kotlin
