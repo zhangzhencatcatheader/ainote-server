@@ -8,6 +8,11 @@ input LoginInput {
     verKey:String
 }
 
+input VerifyCaptchaInput {
+    verCode:String,
+    verKey:String
+}
+
 input SendSmsCodeInput {
     phone:String,
     scene:String
@@ -23,8 +28,8 @@ input  RegisterInput {
     username,
     phone,
     password,
-    verCode:String,
-    verKey:String
+    code:String,
+    scene:String
 }
 
 input ChangeAccountStatusInput {

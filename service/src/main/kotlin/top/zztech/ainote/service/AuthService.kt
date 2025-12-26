@@ -38,6 +38,7 @@ import top.zztech.ainote.runtime.dto.AuthResponse
 import top.zztech.ainote.runtime.utility.JwtTokenProvider
 import top.zztech.ainote.integration.sms.SmsVerifyCodeService
 import top.zztech.ainote.service.dto.LoginInput
+import top.zztech.ainote.service.dto.VerifyCaptchaInput
 import top.zztech.ainote.service.dto.SendSmsCodeInput
 import top.zztech.ainote.service.dto.SmsLoginInput
 import top.zztech.ainote.service.dto.RegisterInput
@@ -108,7 +109,9 @@ class AuthService(
     @PostMapping("/register")
     fun register(@RequestBody input: RegisterInput): AuthResponse {
         try {
-            requireCaptchaOk(input.verCode, input.verKey)
+            val svc = smsVerifyCodeServiceProvider.ifAvailable
+                ?: throw AccountException.smsCodeIsError("短信服务未配置")
+            svc.verify(input.scene, input.phone, input.code)
 
             val account = sql.save(input.copy(password = passwordEncoder.encode(input.password))) {
                 setMode(SaveMode.INSERT_ONLY)
@@ -169,6 +172,11 @@ class AuthService(
         )
     }
 
+    @PostMapping("/captcha/verify")
+    fun verifyCaptcha(@RequestBody input: VerifyCaptchaInput): VerifyCaptchaResponse {
+        return VerifyCaptchaResponse(ok = captchaIsTrue(input.verCode, input.verKey))
+    }
+
     private fun requireCaptchaOk(verCode: String?, verKey: String?) {
         if (!captchaIsTrue(verCode, verKey)) {
             throw AccountException.captchaIsError()
@@ -191,6 +199,10 @@ class AuthService(
     data class CaptchaResponse(
         val key: String,
         val image: String
+    )
+
+    data class VerifyCaptchaResponse(
+        val ok: Boolean
     )
 
     companion object {

@@ -31,7 +31,7 @@ interface Account : BaseEntity {
     val username: String
     val password: String
     val email: String?
-    val phone: String?
+    val phone: String
     @Default(value = "1")
     val status: UserStatus
     @Default(value = "USER")

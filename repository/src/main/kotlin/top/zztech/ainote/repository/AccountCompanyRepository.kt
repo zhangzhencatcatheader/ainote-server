@@ -8,6 +8,7 @@
 
 package top.zztech.ainote.repository
 
+import org.babyfish.jimmer.kt.set
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -17,7 +18,10 @@ import top.zztech.ainote.model.Account
 import top.zztech.ainote.model.AccountCompanyEntity
 import top.zztech.ainote.model.accountId
 import top.zztech.ainote.model.choiceFlag
+import top.zztech.ainote.model.companyId
+import top.zztech.ainote.model.enums.RoleEnum
 import top.zztech.ainote.model.fetchBy
+import top.zztech.ainote.model.role
 import java.util.UUID
 
 /**
@@ -37,4 +41,21 @@ class AccountCompanyRepository(
             select(table.fetch(fetcher))
         }.fetchOneOrNull()
 
+    fun changeRole(companyId: UUID, account: UUID, admin: RoleEnum) {
+        sql.save(AccountCompanyEntity {
+            this.companyId = companyId
+            this.accountId = account
+            this.role = admin
+        })
+    }
+
+    fun findAllByCompanyId(
+        companyId: UUID,
+        fetcher: Fetcher<AccountCompanyEntity>?
+    ): List<AccountCompanyEntity> =
+        createQuery {
+            where(table.companyId eq companyId)
+            where(table.choiceFlag.eq(true))
+            select(table.fetch(fetcher))
+        }.execute()
 }

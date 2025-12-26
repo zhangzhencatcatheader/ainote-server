@@ -16,6 +16,9 @@ import org.springframework.stereotype.Repository
 import top.zztech.ainote.model.Company
 import top.zztech.ainote.model.accountCompanies
 import top.zztech.ainote.model.accountId
+import top.zztech.ainote.model.enums.RoleEnum
+import top.zztech.ainote.model.id
+import top.zztech.ainote.model.role
 import java.util.UUID
 
 @Repository
@@ -51,4 +54,15 @@ class CompanyRepository(
         })
         select(table.fetch(fetcher))
     }.execute()
+
+    fun findByIdAndAdminAccountID(companyId: UUID, account: UUID): Company? =
+        createQuery {
+        where(table.id.eq(companyId),
+            table.accountCompanies {
+                accountId.eq(account)
+                role.eq(RoleEnum.ADMIN)
+            }
+            )
+        select(table)
+    }.fetchOneOrNull()
 }

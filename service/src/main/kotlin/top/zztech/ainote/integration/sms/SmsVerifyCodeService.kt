@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 import top.zztech.ainote.integration.sms.PnvsSmsProperties
 import top.zztech.ainote.error.AccountException
 import java.util.UUID
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 
 @Service
 @ConditionalOnBean(Client::class)
@@ -85,12 +85,11 @@ class SmsVerifyCodeService(
         }
 
         val outIdBucket = redissonClient.getBucket<String>(smsOutIdKey(scene, phoneNumber))
-        outIdBucket.set(outId, pnvsSmsProperties.validTimeSeconds.toLong(), TimeUnit.SECONDS)
+        outIdBucket.set(outId, Duration.ofSeconds(pnvsSmsProperties.validTimeSeconds.toLong()))
 
         freqBucket.set(
             "1",
-            pnvsSmsProperties.minSendIntervalSeconds.toLong(),
-            TimeUnit.SECONDS
+            Duration.ofSeconds(pnvsSmsProperties.minSendIntervalSeconds.toLong())
         )
 
         return SmsSendResult(outId)

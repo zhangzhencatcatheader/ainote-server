@@ -56,6 +56,7 @@ class JwtSecurityConfig(val jwtAuthenticationFilter: JwtAuthenticationFilter) {
                         "/auth/login",
                         "/auth/register",
                         "/auth/captcha",
+                        "/auth/captcha/verify",
                         "/auth/sms/send",
                         "/auth/sms/login"
                     ).permitAll()

@@ -3,17 +3,27 @@ package top.zztech.ainote.service
 import org.babyfish.jimmer.Page
 import org.babyfish.jimmer.client.FetchBy
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
+import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import top.zztech.ainote.error.AccountException
+import top.zztech.ainote.model.Account
+import top.zztech.ainote.model.AccountCompanyEntity
 import top.zztech.ainote.model.Company
 import top.zztech.ainote.model.by
+import top.zztech.ainote.model.companyId
+import top.zztech.ainote.model.enums.RoleEnum
+import top.zztech.ainote.model.role
+import top.zztech.ainote.repository.AccountCompanyRepository
+import top.zztech.ainote.repository.AccountRepository
 import top.zztech.ainote.repository.CompanyRepository
 import top.zztech.ainote.runtime.annotation.LogOperation
 import top.zztech.ainote.runtime.utility.getCurrentAccountId
@@ -24,7 +34,9 @@ import kotlin.random.Random
 @RestController
 @RequestMapping("/company")
 class CompanyService(
-    private val companyRepository: CompanyRepository
+    private val companyRepository: CompanyRepository,
+    private val accountCompanyRepository: AccountCompanyRepository,
+    private val accountRepository: AccountRepository
 ) {
     /**
      * 获取全部企业
@@ -91,9 +103,45 @@ class CompanyService(
     fun allCompanyNames(): List<@FetchBy("COMPANY_NAME") Company> =
         companyRepository.findAll(COMPANY_NAME)
 
+    @PostMapping("/setAdmin")
+    @LogOperation(action = "SET_COMPANY_ADMIN", entityType = "Company", includeRequest = true)
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    fun setAdmin(@RequestBody input: ChangeCompanyRole): UUID {
+        val existingAdmin = companyRepository.findByIdAndAdminAccountID(input.companyId, input.account)
+        if (existingAdmin != null) {
+            throw AccountException.userIsThisCompanyAdmin()
+        }
+
+        accountCompanyRepository.changeRole(input.companyId, input.account, RoleEnum.ADMIN)
+        accountRepository.save(Account{
+            id = input.account
+            role = RoleEnum.COMPANYADMIN
+        })
+        return input.account
+    }
+
     /**
-     * 切换企业
+     * 获取该企业下所有人员
      */
+    @GetMapping("/members")
+    @LogOperation(action = "QUERY_COMPANY_MEMBERS", entityType = "Company", includeRequest = true)
+    @PreAuthorize("isAuthenticated()")
+    fun getCompanyMembers(
+        @RequestParam companyId: UUID
+    ): List<@FetchBy("COMPANY_MEMBER") AccountCompanyEntity> =
+        accountCompanyRepository.findAllByCompanyId(companyId, COMPANY_MEMBER)
+
+    /**
+     * 切换
+     */
+
+
+    data class ChangeCompanyRole(
+        val companyId: UUID,
+        val account: UUID
+    )
+
 
 
 
@@ -104,10 +152,32 @@ class CompanyService(
             address()
             tenant()
             contact()
+            accountCompanies({
+                filter {
+                    where(table.role eq RoleEnum.ADMIN)
+                }
+            }) {
+                account {
+                    username()
+                }
+                role()
+            }
         }
 
         private val COMPANY_NAME = newFetcher(Company::class).by {
             name()
         }
+
+        private val COMPANY_MEMBER = newFetcher(AccountCompanyEntity::class).by {
+            role()
+            account {
+                username()
+                avatar {
+                    filePath()
+                    fileName()
+                }
+            }
+        }
+
     }
 }
