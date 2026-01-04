@@ -45,24 +45,33 @@ curl -X POST http://localhost:8080/api/auth/login \
 
 **POST** `/auth/register`
 
-注册新用户账户。
+使用手机号和短信验证码注册新用户账户。
 
 **请求体：**
 ```json
 {
   "username": "newuser",
   "password": "password123",
-  "email": "user@example.com",
-  "phone": "13800138000"
+  "phone": "13800138000",
+  "code": "123456",
+  "scene": "REGISTER"
 }
 ```
+
+**请求参数：**
+- `username`: 用户名（必填）
+- `password`: 密码（必填）
+- `phone`: 手机号（必填）
+- `code`: 短信验证码（必填）
+- `scene`: 验证码场景（必填，如 "REGISTER"）
 
 **响应：**
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "role": "USER"
+  "role": "USER",
+  "tenant": "default"
 }
 ```
 
@@ -70,22 +79,127 @@ curl -X POST http://localhost:8080/api/auth/login \
 
 **POST** `/auth/login`
 
-用户身份验证，返回 JWT Token。
+使用用户名和密码登录，需要图形验证码。
 
 **请求体：**
 ```json
 {
   "username": "admin",
-  "password": "password"
+  "password": "password",
+  "verCode": "abcd",
+  "verKey": "uuid-key"
 }
 ```
+
+**请求参数：**
+- `username`: 用户名（必填）
+- `password`: 密码（必填）
+- `verCode`: 图形验证码（必填）
+- `verKey`: 验证码密钥（必填）
 
 **响应：**
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440001",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "role": "ADMIN"
+  "role": "ADMIN",
+  "tenant": "default"
+}
+```
+
+### 短信验证码登录
+
+**POST** `/auth/sms/login`
+
+使用手机号和短信验证码登录。
+
+**请求体：**
+```json
+{
+  "phone": "13800138000",
+  "code": "123456",
+  "scene": "LOGIN"
+}
+```
+
+**请求参数：**
+- `phone`: 手机号（必填）
+- `code`: 短信验证码（必填）
+- `scene`: 验证码场景（必填）
+
+**响应：**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "role": "USER",
+  "tenant": "123456"
+}
+```
+
+### 发送短信验证码
+
+**POST** `/auth/sms/send`
+
+发送短信验证码到指定手机号。
+
+**请求体：**
+```json
+{
+  "phone": "13800138000",
+  "scene": "REGISTER"
+}
+```
+
+**请求参数：**
+- `phone`: 手机号（必填）
+- `scene`: 验证码场景（必填，如 "REGISTER"、"LOGIN"）
+
+**响应：**
+```json
+{
+  "success": true,
+  "message": "验证码已发送",
+  "ttl": 300
+}
+```
+
+### 获取图形验证码
+
+**GET** `/auth/captcha`
+
+获取图形验证码，用于登录/注册时的安全验证。
+
+**响应：**
+```json
+{
+  "key": "550e8400-e29b-41d4-a716-446655440000",
+  "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+}
+```
+
+**响应参数：**
+- `key`: 验证码密钥，用于验证时提交
+- `image`: Base64 编码的验证码图片
+
+### 验证图形验证码
+
+**POST** `/auth/captcha/verify`
+
+验证图形验证码是否正确。
+
+**请求体：**
+```json
+{
+  "verCode": "abcd",
+  "verKey": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**响应：**
+```json
+{
+  "ok": true
 }
 ```
 
@@ -371,7 +485,8 @@ Content-Type: application/json
       "id": "550e8400-e29b-41d4-a716-446655440005",
       "name": "示例公司",
       "code": "DEMO001",
-      "address": "公司地址"
+      "address": "公司地址",
+      "tenant": "123456"
     }
   ],
   "totalElements": 1,
@@ -383,7 +498,7 @@ Content-Type: application/json
 
 **POST** `/company/add`
 
-管理员添加新公司。
+管理员添加新公司，系统自动生成租户标识。
 
 **请求头：**
 ```
@@ -396,7 +511,9 @@ Content-Type: application/json
 {
   "name": "新公司",
   "code": "NEW001",
-  "address": "公司地址"
+  "address": "公司地址",
+  "contact": "联系人",
+  "status": "ACTIVE"
 }
 ```
 
@@ -442,6 +559,182 @@ Authorization: Bearer {token}
 [
   {
     "name": "示例公司"
+  }
+]
+```
+
+### 获取公司名称列表
+
+**GET** `/company/names`
+
+获取所有公司名称列表（用于下拉选择等场景）。
+
+**请求头：**
+```
+Authorization: Bearer {token}
+```
+
+**响应：**
+```json
+[
+  {
+    "name": "示例公司"
+  },
+  {
+    "name": "测试公司"
+  }
+]
+```
+
+### 获取公司成员
+
+**GET** `/company/members`
+
+获取指定公司的所有成员信息。
+
+**查询参数：**
+- `companyId`: 公司 ID（必填）
+
+**请求头：**
+```
+Authorization: Bearer {token}
+```
+
+**响应：**
+```json
+[
+  {
+    "role": "ADMIN",
+    "account": {
+      "username": "admin",
+      "avatar": {
+        "filePath": "https://...",
+        "fileName": "avatar.jpg"
+      }
+    }
+  }
+]
+```
+
+### 设置公司管理员
+
+**POST** `/company/setAdmin`
+
+设置用户为公司的管理员（仅管理员可用）。
+
+**请求头：**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**请求体：**
+```json
+{
+  "companyId": "550e8400-e29b-41d4-a716-446655440005",
+  "account": "550e8400-e29b-41d4-a716-446655440001"
+}
+```
+
+**响应：**
+```json
+"550e8400-e29b-41d4-a716-446655440001"
+```
+
+## AI 服务 API
+
+### AI 对话
+
+**POST** `/ai/chat`
+
+使用 AI 模型进行智能对话。
+
+**请求头：**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**请求体：**
+```json
+{
+  "prompt": "你好，请帮我写一段 Python 代码"
+}
+```
+
+**响应：**
+```json
+{
+  "result": "当然可以！以下是一段 Python 代码示例：..."
+}
+```
+
+### AI 生成台账模板字段
+
+**POST** `/ai/template-fields`
+
+使用 AI 根据模板信息和文档自动生成台账模板字段定义。
+
+**请求头：**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**请求体：**
+```json
+{
+  "name": "安全生产巡查台账",
+  "description": "用于记录日常安全生产巡查情况",
+  "category": "safety",
+  "fileId": "550e8400-e29b-41d4-a716-446655440010"
+}
+```
+
+**请求参数：**
+- `name`: 模板名称（必填）
+- `description`: 模板描述（可选）
+- `category`: 模板分类（可选）
+- `fileId`: 参考文档文件 ID（可选，如果提供则基于文档内容生成字段）
+
+**响应：**
+```json
+[
+  {
+    "fieldName": "inspection_date",
+    "fieldLabel": "巡查日期",
+    "fieldType": "DATE",
+    "required": true,
+    "sortOrder": 0
+  },
+  {
+    "fieldName": "inspector",
+    "fieldLabel": "巡查人员",
+    "fieldType": "TEXT",
+    "required": true,
+    "sortOrder": 1
+  },
+  {
+    "fieldName": "location",
+    "fieldLabel": "巡查地点",
+    "fieldType": "TEXT",
+    "required": true,
+    "sortOrder": 2
+  },
+  {
+    "fieldName": "issues_found",
+    "fieldLabel": "发现问题",
+    "fieldType": "TEXTAREA",
+    "required": false,
+    "sortOrder": 3
+  },
+  {
+    "fieldName": "status",
+    "fieldLabel": "状态",
+    "fieldType": "SELECT",
+    "fieldOptions": "[\"正常\",\"异常\",\"已整改\"]",
+    "required": true,
+    "sortOrder": 4
   }
 ]
 ```

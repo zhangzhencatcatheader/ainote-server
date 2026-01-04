@@ -14,7 +14,9 @@ import org.babyfish.jimmer.sql.ast.mutation.AssociatedSaveMode
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.kt.ast.mutation.KSimpleSaveResult
 import org.babyfish.jimmer.sql.kt.fetcher.newFetcher
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -24,8 +26,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import top.zztech.ainote.error.AccountException
+import top.zztech.ainote.integration.sms.SmsVerifyCodeService
 import top.zztech.ainote.model.Account
 import top.zztech.ainote.model.by
+import top.zztech.ainote.model.password
 import top.zztech.ainote.repository.AccountRepository
 import top.zztech.ainote.runtime.annotation.LogOperation
 import top.zztech.ainote.runtime.utility.getCurrentAccountId
@@ -43,8 +47,22 @@ import java.util.UUID
 @RestController
 @RequestMapping("/account")
 class AccountService(
-    val accountRepository: AccountRepository
+    val accountRepository: AccountRepository,
+    val passwordEncoder: PasswordEncoder,
+    val smsVerifyCodeServiceProvider: ObjectProvider<SmsVerifyCodeService>
 ) {
+
+    data class ChangePasswordInput(
+        val oldPassword: String,
+        val newPassword: String
+    )
+
+    data class ResetPasswordInput(
+        val phone: String,
+        val code: String,
+        val scene: String,
+        val newPassword: String
+    )
 
     /**
      * 获取我的个人信息
@@ -108,6 +126,54 @@ class AccountService(
     fun changeStatus(@RequestBody input: ChangeAccountStatusInput): KSimpleSaveResult<Account> {
         return accountRepository.saveCommand(input, SaveMode.UPDATE_ONLY).execute();
     }
+
+    @LogOperation(action = "CHANGE_PASSWORD", entityType = "Account", includeRequest = false)
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/change-password")
+    @Transactional
+    fun changePassword(@RequestBody input: ChangePasswordInput): Map<String, String> {
+        val currentUserId = getCurrentAccountId()
+            ?: throw AccountException.usernameDoesNotExist()
+        
+        val account = accountRepository.findById(currentUserId, newFetcher(Account::class).by {
+            password()
+        }) ?: throw AccountException.usernameDoesNotExist()
+        
+        if (!passwordEncoder.matches(input.oldPassword, account.password)) {
+            throw AccountException.passwordIsError("旧密码错误")
+        }
+        
+        accountRepository.saveCommand(Account {
+            id = currentUserId
+            password = passwordEncoder.encode(input.newPassword)
+        })
+        
+        return mapOf("message" to "密码修改成功")
+    }
+
+    @LogOperation(action = "RESET_PASSWORD", entityType = "Account", includeRequest = false)
+    @PostMapping("/reset-password")
+    @Transactional
+    fun resetPassword(@RequestBody input: ResetPasswordInput): Map<String, String> {
+        val svc = smsVerifyCodeServiceProvider.ifAvailable
+            ?: throw AccountException.smsCodeIsError("短信服务未配置")
+        svc.verify(input.scene, input.phone, input.code)
+
+        val account = accountRepository.findByPhone(input.phone, null)
+            ?: throw AccountException.phoneDoesNotExist()
+        
+        accountRepository.saveCommand(Account {
+            id = account.id
+            password = passwordEncoder.encode(input.newPassword)
+        })
+        
+        return mapOf("message" to "密码重置成功")
+    }
+
+    /**
+     * 切换企业
+     */
+
 
     companion object {
       private  val SIMPLE_ACCOUNT = newFetcher(Account::class).by {

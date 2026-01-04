@@ -13,10 +13,12 @@ import org.babyfish.jimmer.Specification
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.ast.table.makeOrders
 import org.springframework.stereotype.Repository
 import top.zztech.ainote.model.Account
 import top.zztech.ainote.model.Company
+import top.zztech.ainote.model.phone
 import java.util.UUID
 
 /**
@@ -40,4 +42,10 @@ class AccountRepository(
             orderBy(table.makeOrders(sort))
             select(table.fetch(fetcher))
         }.fetchPage(pageIndex,pageSize)
+
+    fun findByPhone(phone: String, fetcher: Fetcher<Account>?): Account? =
+        createQuery {
+            where(table.phone eq phone)
+            select(table.fetch(fetcher))
+        }.fetchOneOrNull()
 }
