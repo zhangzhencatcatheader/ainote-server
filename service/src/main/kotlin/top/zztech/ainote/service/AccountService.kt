@@ -146,7 +146,7 @@ class AccountService(
         accountRepository.saveCommand(Account {
             id = currentUserId
             password = passwordEncoder.encode(input.newPassword)
-        })
+        }).execute()
         
         return mapOf("message" to "密码修改成功")
     }
@@ -165,7 +165,7 @@ class AccountService(
         accountRepository.saveCommand(Account {
             id = account.id
             password = passwordEncoder.encode(input.newPassword)
-        })
+        }).execute()
         
         return mapOf("message" to "密码重置成功")
     }
