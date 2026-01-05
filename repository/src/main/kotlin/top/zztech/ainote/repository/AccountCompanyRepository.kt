@@ -10,6 +10,7 @@ package top.zztech.ainote.repository
 
 import org.babyfish.jimmer.kt.set
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
+import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.sql.fetcher.Fetcher
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
@@ -34,6 +35,8 @@ class AccountCompanyRepository(
     sql: KSqlClient
 ) : AbstractKotlinRepository<AccountCompanyEntity, UUID>(sql) {
 
+    private val sqlClient: KSqlClient = sql
+
     fun getChoiceCompanyByAccount(id: UUID, fetcher: Fetcher<AccountCompanyEntity>) =
         sql.createQuery(AccountCompanyEntity::class) {
             where(table.accountId eq id)
@@ -47,6 +50,28 @@ class AccountCompanyRepository(
             this.accountId = account
             this.role = admin
         })
+    }
+
+    fun hasCompany(accountId: UUID, companyId: UUID): Boolean =
+        sqlClient.createQuery(AccountCompanyEntity::class) {
+            where(table.accountId eq accountId)
+            where(table.companyId eq companyId)
+            select(table)
+        }.fetchOneOrNull() != null
+
+    fun switchChoiceCompany(accountId: UUID, companyId: UUID) {
+        // 先将该用户的所有公司的 choiceFlag 设为 false
+        sqlClient.createUpdate(AccountCompanyEntity::class) {
+            where(table.accountId eq accountId)
+            set(table.choiceFlag, false)
+        }.execute()
+
+        // 再将指定公司的 choiceFlag 设为 true
+        sqlClient.createUpdate(AccountCompanyEntity::class) {
+            where(table.accountId eq accountId)
+            where(table.companyId eq companyId)
+            set(table.choiceFlag, true)
+        }.execute()
     }
 
     fun findAllByCompanyId(

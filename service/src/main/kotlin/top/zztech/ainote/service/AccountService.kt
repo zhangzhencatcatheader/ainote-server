@@ -28,10 +28,14 @@ import org.springframework.web.bind.annotation.RestController
 import top.zztech.ainote.error.AccountException
 import top.zztech.ainote.integration.sms.SmsVerifyCodeService
 import top.zztech.ainote.model.Account
+import top.zztech.ainote.model.AccountCompanyEntity
 import top.zztech.ainote.model.by
 import top.zztech.ainote.model.password
+import top.zztech.ainote.repository.AccountCompanyRepository
 import top.zztech.ainote.repository.AccountRepository
 import top.zztech.ainote.runtime.annotation.LogOperation
+import top.zztech.ainote.runtime.dto.AuthResponse
+import top.zztech.ainote.runtime.utility.JwtTokenProvider
 import top.zztech.ainote.runtime.utility.getCurrentAccountId
 import top.zztech.ainote.service.dto.AccountSearch
 import top.zztech.ainote.service.dto.ChangeAccountStatusInput
@@ -48,6 +52,8 @@ import java.util.UUID
 @RequestMapping("/account")
 class AccountService(
     val accountRepository: AccountRepository,
+    val accountCompanyRepository: AccountCompanyRepository,
+    val jwtTokenProvider: JwtTokenProvider,
     val passwordEncoder: PasswordEncoder,
     val smsVerifyCodeServiceProvider: ObjectProvider<SmsVerifyCodeService>
 ) {
@@ -63,7 +69,9 @@ class AccountService(
         val scene: String,
         val newPassword: String
     )
-
+    data class SwitchCompanyInput(
+        val companyId: UUID
+    )
     /**
      * 获取我的个人信息
      */
@@ -174,6 +182,35 @@ class AccountService(
      * 切换企业
      */
 
+    @LogOperation(action = "SWITCH_COMPANY", entityType = "Account", includeRequest = true)
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/switch-company")
+    @Transactional
+    fun switchCompany(@RequestBody input: SwitchCompanyInput): AuthResponse {
+        val currentUserId = getCurrentAccountId()
+            ?: throw AccountException.usernameDoesNotExist()
+        if (!accountCompanyRepository.hasCompany(currentUserId, input.companyId)) {
+            throw AccountException.notInCompany()
+        }
+
+        accountCompanyRepository.switchChoiceCompany(currentUserId, input.companyId)
+
+        val account = accountRepository.findById(currentUserId, newFetcher(Account::class).by {
+            username()
+            role()
+        }) ?: throw AccountException.usernameDoesNotExist()
+
+        val selectedCompany = accountCompanyRepository.getChoiceCompanyByAccount(currentUserId, SIMPLE_ACCOUNT_COMPANY)
+        val tenant = selectedCompany?.company?.tenant ?: "default"
+
+        return AuthResponse(
+            currentUserId,
+            jwtTokenProvider.generateToken(account.username),
+            account.role.name,
+            tenant
+        )
+    }
+
 
     companion object {
       private  val SIMPLE_ACCOUNT = newFetcher(Account::class).by {
@@ -194,6 +231,15 @@ class AccountService(
                        name()
                    }
            }
+      }
+
+      private val SIMPLE_ACCOUNT_COMPANY = newFetcher(top.zztech.ainote.model.AccountCompanyEntity::class).by {
+          choiceFlag()
+          role()
+          company {
+              tenant()
+              name()
+          }
       }
     }
 } 
